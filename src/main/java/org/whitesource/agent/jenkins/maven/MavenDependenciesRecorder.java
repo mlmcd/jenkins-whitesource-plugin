@@ -56,9 +56,18 @@ public class MavenDependenciesRecorder extends MavenReporter {
      */
     private transient Set<DependencyInfo> dependencies;
     
+    /* --- Constructors --- */
+    
+    /**
+     * Default constructor
+     */
+    public MavenDependenciesRecorder() {
+    	dependencies = new HashSet<DependencyInfo>(); 
+    }
+    
     /* --- Concrete implementation methods --- */
 
-    @Override
+	@Override
     public boolean preBuild(MavenBuildProxy build, MavenProject pom, BuildListener listener) {
         listener.getLogger().println("[Jenkins] Collecting dependencies info");
         dependencies = new HashSet<DependencyInfo>();
@@ -69,8 +78,7 @@ public class MavenDependenciesRecorder extends MavenReporter {
      * Mojos perform different dependency resolution, so we add dependencies for each mojo.
      */
     @Override
-    public boolean postExecute(MavenBuildProxy build, MavenProject pom, MojoInfo mojo, BuildListener listener,
-            Throwable error) {
+    public boolean postExecute(MavenBuildProxy build, MavenProject pom, MojoInfo mojo, BuildListener listener, Throwable error) {
         recordMavenDependencies(pom.getArtifacts());
         return true;
     }
@@ -81,26 +89,7 @@ public class MavenDependenciesRecorder extends MavenReporter {
     @Override
     public boolean postBuild(MavenBuildProxy build, MavenProject pom, BuildListener listener)
             throws InterruptedException, IOException {
-        build.executeAsync(new BuildCallable<Void, IOException>() {
-            
-        	/* --- Static members --- */
-			private static final long serialVersionUID = -3923086337535368565L;
-			
-			/* --- Members --- */
-			
-			// record is transient, so needs to make a copy first
-            private final Set<DependencyInfo> d = dependencies;
-            
-            /* --- Interface implementation methods --- */
-
-            public Void call(MavenBuild build) throws IOException, InterruptedException {
-                // add the action
-                //TODO: [by yl] These actions are persisted into the build.xml of each build run - we need another
-                //context to store these actions
-                build.getActions().add(new MavenDependenciesRecord(d));
-                return null;
-            }
-        });
+        build.executeAsync(new ActionCreatorBuildCallable(dependencies));
         return true;
     }
     
@@ -132,7 +121,7 @@ public class MavenDependenciesRecorder extends MavenReporter {
     
     /* --- Nested classes --- */
 
-    @Extension
+	@Extension
     public static final class DescriptorImpl extends MavenReporterDescriptor {
     	
         @Override
@@ -145,5 +134,43 @@ public class MavenDependenciesRecorder extends MavenReporter {
             return new MavenDependenciesRecorder();
         }
     }
+	
+	/**
+	 * Using a nested class reduce the need to serialize the outer class.
+	 * findbugs : SE_INNER_CLASS 
+	 * 
+	 * @author Edo.Shor
+	 */
+	public static final class ActionCreatorBuildCallable implements BuildCallable<Void, IOException> {
+		
+		/* --- Static members --- */
+		private static final long serialVersionUID = -3923086337535368565L;
+		
+		/* --- Members --- */
+		
+		// record is transient, so needs to make a copy first
+		private final Set<DependencyInfo> dependencies;
+		
+		/* --- Constructors --- */
+		
+		/**
+		 * Constructor
+		 * 
+		 * @param dependencies
+		 */
+		public ActionCreatorBuildCallable(Set<DependencyInfo> dependencies) {
+			this.dependencies = dependencies;
+		}
+
+		/* --- Interface implementation methods --- */
+
+		public Void call(MavenBuild build) throws IOException, InterruptedException {
+		    // add the action
+		    //TODO: These actions are persisted into the build.xml of each build run - we need another
+		    //context to store these actions
+		    build.getActions().add(new MavenDependenciesRecord(dependencies));
+		    return null;
+		}
+	}
     
 }
