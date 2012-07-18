@@ -17,10 +17,16 @@
 package org.whitesource.agent.jenkins;
 
 import hudson.EnvVars;
+import hudson.ProxyConfiguration;
 
 import java.util.Collection;
 
+import jenkins.model.Jenkins;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.whitesource.agent.api.dispatch.RequestFactory;
 import org.whitesource.agent.api.dispatch.UpdateInventoryResult;
 import org.whitesource.agent.api.model.AgentProjectInfo;
@@ -50,11 +56,23 @@ public class WssService {
 	public WssService() {
 		requestFactory = new RequestFactory(Constants.AGENT_TYPE, Constants.AGENT_VERSION);
 		
+		// create client to White Source
 		String serviceUrl = EnvVars.masterEnvVars.get(Constants.SERVICE_URL_KEYWORD);
 		if (StringUtils.isBlank(serviceUrl)) {
 			serviceUrl = System.getProperty(Constants.SERVICE_URL_KEYWORD, Constants.DEFAULT_SERVICE_URL);
 		}
 		client = new WssServiceClientImpl(serviceUrl);
+		
+		// setup proxy configuration
+		ProxyConfiguration proxy = Jenkins.getInstance() !=null ? Jenkins.getInstance().proxy : null;
+		if (proxy != null) {
+			client.setProxy(proxy.name, proxy.port);
+			if(proxy.getUserName() != null) {
+				DefaultHttpClient underlyingClient = (DefaultHttpClient) ((WssServiceClientImpl)client).getHttpClient();
+				underlyingClient.getCredentialsProvider().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("username", "password"));
+			}
+		}
+		
 	}
 	
 	/* --- Public methods --- */
