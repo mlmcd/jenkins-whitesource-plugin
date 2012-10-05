@@ -16,7 +16,7 @@
  * This file contains modifications to the original work made by White Source Ltd. 2012. 
  */
 
-package org.whitesource.agent.jenkins.maven;
+package org.whitesource.jenkins.maven;
 
 import hudson.Extension;
 import hudson.maven.MavenBuild;
@@ -30,7 +30,7 @@ import hudson.model.BuildListener;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import org.whitesource.agent.api.model.DependencyInfo;
-import org.whitesource.agent.jenkins.WssUtils;
+import org.whitesource.jenkins.WssUtils;
 
 
 import java.io.IOException;

@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package org.whitesource.agent.jenkins;
+package org.whitesource.jenkins;
 
 import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
+import org.whitesource.agent.api.model.DependencyInfo;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.whitesource.agent.api.model.DependencyInfo;
 
 /**
  * Implementation of the interface for scanning the workspace for all OSS libraries. 

@@ -70,6 +70,7 @@
 	</developers>
 	
 	<properties>
+        <whitesource.agent.version>1.2.0-SNAPSHOT</whitesource.agent.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	
@@ -78,12 +79,12 @@
 		<dependency>
 			<groupId>org.whitesource</groupId>
 			<artifactId>wss-agent-api</artifactId>
-			<version>1.0.0</version>
+			<version>${whitesource.agent.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.whitesource</groupId>
 			<artifactId>wss-agent-api-client</artifactId>
-			<version>1.0.0</version>
+			<version>${whitesource.agent.version}</version>
 		</dependency>
 
 		<!-- Jenkins CI -->
@@ -118,6 +119,16 @@
 	</dependencies>
 
 	<build>
+        <plugins>
+            <plugin>
+                <groupId>org.whitesource</groupId>
+                <artifactId>whitesource-maven-plugin</artifactId>
+                <version>${whitesource.agent.version}</version>
+                <configuration>
+                    <!--<projectToken>9c51e849-e55a-4819-93c0-d703aa52f0ee</projectToken>-->
+                </configuration>
+            </plugin>
+        </plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -191,6 +202,14 @@
 					<artifactId>maven-license-plugin</artifactId>
 					<version>1.4</version>
 				</plugin>
+                <plugin>
+                    <groupId>org.whitesource</groupId>
+                    <artifactId>whitesource-maven-plugin</artifactId>
+                    <version>${whitesource.agent.version}</version>
+                    <configuration>
+                        <orgToken>${whitesource.orgToken}</orgToken>
+                    </configuration>
+                </plugin>
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>

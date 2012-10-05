@@ -14,32 +14,24 @@
  * limitations under the License.
  */
 
-package org.whitesource.agent.jenkins;
+package org.whitesource.jenkins;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.ProxyConfiguration;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenModule;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.maven.reporters.MavenArtifactRecord;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
-import hudson.model.Result;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map.Entry;
-
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -48,14 +40,20 @@ import org.whitesource.agent.api.dispatch.UpdateInventoryResult;
 import org.whitesource.agent.api.model.AgentProjectInfo;
 import org.whitesource.agent.api.model.Coordinates;
 import org.whitesource.agent.api.model.DependencyInfo;
-import org.whitesource.agent.jenkins.maven.MavenDependenciesRecord;
+import org.whitesource.api.client.ClientConstants;
+import org.whitesource.api.client.WhitesourceService;
 import org.whitesource.api.client.WssServiceException;
+import org.whitesource.jenkins.maven.MavenDependenciesRecord;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map.Entry;
 
 /**
  * @author ramakrishna
  * @author Edo.Shor
  */
-@SuppressWarnings("unchecked")
 public class WhiteSourcePublisher extends Recorder {
 
 	/* --- Members --- */
@@ -118,11 +116,14 @@ public class WhiteSourcePublisher extends Recorder {
 
 		// update White Source
 		listener.getLogger().println("\nSending OSS information to White Source service");
-		WssService service = new WssService();
+
+        WhitesourceService service = createWhtiesourceService();
+
 		try {
-			UpdateInventoryResult result = service.update(orgToken, projectInfos);
+            UpdateInventoryResult result = service.update(orgToken, projectInfos);
 			logUpdateResult(result, listener);
 			listener.getLogger().println("Update successful");
+
 			return true;
 		} catch (WssServiceException e) {
 			listener.getLogger().println("Update fail: " + e.getMessage());
@@ -136,7 +137,7 @@ public class WhiteSourcePublisher extends Recorder {
 		return true;
 	}
 
-	/* --- Public methods --- */
+    /* --- Public methods --- */
 	
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
@@ -190,6 +191,23 @@ public class WhiteSourcePublisher extends Recorder {
 		
 		return projectInfo;
 	}
+
+    private WhitesourceService createWhtiesourceService() {
+        String serviceUrl = EnvVars.masterEnvVars.get(ClientConstants.SERVICE_URL_KEYWORD);
+        WhitesourceService service = new WhitesourceService(Constants.AGENT_TYPE, Constants.AGENT_VERSION, serviceUrl);
+
+        // setup proxy configuration
+        ProxyConfiguration proxy = Jenkins.getInstance() !=null ? Jenkins.getInstance().proxy : null;
+        if (proxy != null) {
+            if(proxy.getUserName() == null) {
+                service.getClient().setProxy(proxy.name, proxy.port, null, null);
+            } else  {
+                service.getClient().setProxy(proxy.name, proxy.port, proxy.getUserName(), proxy.getPassword());
+            }
+        }
+
+        return service;
+    }
 	
 	private void logUpdateResult(UpdateInventoryResult result, BuildListener listener) {
 		listener.getLogger().println("White Source update results: ");

@@ -2,10 +2,10 @@
 	<f:block>
   		<table width="100%" style="margin-left:2em">
 	  
-			<j:invokeStatic var="isFreeStyle" className="org.whitesource.agent.jenkins.WssUtils" method="isFreeStyle">
+			<j:invokeStatic var="isFreeStyle" className="org.whitesource.jenkins.WssUtils" method="isFreeStyle">
 				<j:arg value="${it}" type="hudson.model.AbstractProject"/>
 			</j:invokeStatic>
-			<j:invokeStatic var="isFreeStyleMaven" className="org.whitesource.agent.jenkins.WssUtils" method="isFreeStyleMaven">
+			<j:invokeStatic var="isFreeStyleMaven" className="org.whitesource.jenkins.WssUtils" method="isFreeStyleMaven">
 				<j:arg value="${it}" type="hudson.model.AbstractProject"/>
 			</j:invokeStatic>
 			  

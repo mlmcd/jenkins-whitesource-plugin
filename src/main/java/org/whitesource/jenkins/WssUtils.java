@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package org.whitesource.agent.jenkins;
+package org.whitesource.jenkins;
 
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
 import hudson.tasks.Maven;
+import org.whitesource.agent.api.ChecksumUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Map;
 
-import org.sonatype.aether.util.ChecksumUtils;
 
 /**
  * Utility methods used throughout the plugin.
@@ -52,8 +50,7 @@ public final class WssUtils {
 		
 		if (file != null) {
 			try {
-				Map<String, Object> calcMap = ChecksumUtils.calc(file, Arrays.asList(Constants.SHA1));
-				sha1 = (String) calcMap.get(Constants.SHA1);
+				sha1 = ChecksumUtils.calculateSHA1(file);
 			} catch (IOException e) {
 				if (logger != null) {
 					logger.println(Constants.ERROR_SHA1 + " " + e.getMessage());
